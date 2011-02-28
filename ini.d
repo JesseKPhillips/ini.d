@@ -23,6 +23,7 @@
  
 	Modified by Jesse Phillips
 	Changed all string to string. 
+	Changed inout to ref for fuctions
 	Other changes marked
 
 Update:
@@ -163,7 +164,7 @@ public:
 
 
 	/// foreach key.
-	int opApply(int delegate(inout IniKey) dg)
+	int opApply(int delegate(ref IniKey) dg)
 	{
 		int result = 0;
 		uint i;
@@ -783,7 +784,7 @@ public:
 
 
 	/// foreach section.
-	int opApply(int delegate(inout IniSection) dg)
+	int opApply(int delegate(ref IniSection) dg)
 	{
 		int result = 0;
 		foreach(IniSection isec; isecs)
