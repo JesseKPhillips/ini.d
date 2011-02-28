@@ -20,6 +20,10 @@
 */
 
 /*
+ 
+	Modified by Jesse Phillips
+	Changed all string to string. 
+	Other changes marked
 
 Update:
 The Ini object no longer saves in the destructor because if it is the
@@ -76,7 +80,7 @@ private class IniLine
 	
 	
 private:
-	char[] data;
+	string data;
 }
 
 
@@ -86,11 +90,11 @@ class IniKey: IniLine
 protected:
 	//these are slices in data if unmodified
 	//if modified, data is set to null
-	char[] _name;
-	char[] _value;
+	string _name;
+	string _value;
 
 
-	this(char[] name)
+	this(string name)
 	{
 		_name = name;
 	}
@@ -105,14 +109,14 @@ protected:
 
 public:
 	/// Property: get key _name.
-	char[] name()
+	string name()
 	{
 		return _name;
 	}
 
 
 	/// Property: get key _value.
-	char[] value()
+	string value()
 	{
 		return _value;
 	}
@@ -124,11 +128,11 @@ class IniSection
 {
 protected:
 	Ini _ini;
-	char[] _name;
+	string _name;
 	IniLine[] lines;
 
 
-	this(Ini ini, char[] name)
+	this(Ini ini, string name)
 	{
 		_ini = ini;
 		_name = name;
@@ -144,14 +148,14 @@ protected:
 
 public:
 	/// Property: get section _name.
-	char[] name()
+	string name()
 	{
 		return _name;
 	}
 
 
 	/// Property: set section _name.
-	void name(char[] newName)
+	void name(string newName)
 	{
 		_ini._modified = true;
 		_name = newName;
@@ -193,7 +197,7 @@ public:
 
 
 	/// Returns: _key matching keyName, or null if not present.
-	IniKey key(char[] keyName)
+	IniKey key(string keyName)
 	{
 		foreach(IniKey ikey; this)
 		{
@@ -205,7 +209,7 @@ public:
 
 
 	/// Set an existing key's value.
-	void setValue(IniKey ikey, char[] newValue)
+	void setValue(IniKey ikey, string newValue)
 	{
 		ikey._value = newValue;
 		_ini._modified = true;
@@ -214,7 +218,7 @@ public:
 
 
 	/// Find or create key keyName and set its _value to newValue.
-	void setValue(char[] keyName, char[] newValue)
+	void setValue(string keyName, string newValue)
 	{
 		IniKey ikey = key(keyName);
 		if(!ikey)
@@ -234,21 +238,21 @@ public:
 	
 	
 	/// Same as setValue(ikey, newValue).
-	void value(IniKey ikey, char[] newValue)
+	void value(IniKey ikey, string newValue)
 	{
 		return setValue(ikey, newValue);
 	}
 	
 	
 	/// Same as setValue(keyName, newValue).
-	void value(char[] keyName, char[] newValue)
+	void value(string keyName, string newValue)
 	{
 		return setValue(keyName, newValue);
 	}
 
 
 	/// Returns: value of the existing key keyName, or defaultValue if not present.
-	char[] getValue(char[] keyName, char[] defaultValue = null)
+	string getValue(string keyName, string defaultValue = null)
 	{
 		foreach(IniKey ikey; this)
 		{
@@ -261,28 +265,28 @@ public:
 	
 	// /// Returns: _value of the existing key keyName, or null if not present.
 	/// Same as getValue(keyName, null).
-	char[] value(char[] keyName)
+	string value(string keyName)
 	{
 		return getValue(keyName, null);
 	}
 
 
 	/// Shortcut for getValue(keyName).
-	char[] opIndex(char[] keyName)
+	string opIndex(string keyName)
 	{
 		return value(keyName);
 	}
 
 
 	/// Shortcut for setValue(keyName, newValue).
-	void opIndexAssign(char[] newValue, char[] keyName)
+	void opIndexAssign(string newValue, string keyName)
 	{
 		value(keyName, newValue);
 	}
 	
 	
 	/// _Remove key keyName.
-	void remove(char[] keyName)
+	void remove(string keyName)
 	{
 		uint i;
 		IniKey ikey;
@@ -309,7 +313,7 @@ public:
 class Ini
 {
 protected:
-	char[] _file;
+	string _file;
 	bool _modified = false;
 	IniSection[] isecs;
 	char secStart = '[', secEnd = ']';
@@ -320,14 +324,14 @@ protected:
 		debug(INI)
 			printf("INI parsing file '%.*s'\n", _file);
 
-		char[] data;
+		string data;
 		int i = -1;
 		IniSection isec;
 		uint lineStartIndex = 0; 
 
 		try
 		{
-			data = cast(char[])std.file.read(_file);
+			data = cast(string)std.file.read(_file);
 			/+
 			File f = new File(_file, FileMode.In);
 			data = f.readString(f.size());
@@ -601,7 +605,7 @@ protected:
 	}
 	
 	
-	void firstOpen(char[] file)
+	void firstOpen(string file)
 	{
 		//null terminated just to make it easier for the implementation
 		_file = toStringz(file)[0 .. file.length];
@@ -611,7 +615,7 @@ protected:
 
 public:
 	// Use different section name delimiters; not recommended.
-	this(char[] file, char secStart, char secEnd)
+	this(string file, char secStart, char secEnd)
 	{
 		this.secStart = secStart;
 		this.secEnd = secEnd;
@@ -621,7 +625,7 @@ public:
 
 
 	/// Construct a new INI _file.
-	this(char[] file)
+	this(string file)
 	{
 		firstOpen(file);
 	}
@@ -641,7 +645,7 @@ public:
 
 
 	/// Comparison function for section and key names. Override to change behavior.
-	bool match(char[] s1, char[] s2)
+	bool match(string s1, string s2)
 	{
 		return !std.string.icmp(s1, s2);
 	}
@@ -649,7 +653,7 @@ public:
 
 	//reuse same object for another file
 	/// Open an INI _file.
-	void open(char[] file)
+	void open(string file)
 	{
 		if(_modified)
 			save();
@@ -745,7 +749,7 @@ public:
 
 
 	/// Finds a _section; returns null if one named name does not exist.
-	IniSection section(char[] name)
+	IniSection section(string name)
 	{
 		foreach(IniSection isec; isecs)
 		{
@@ -757,7 +761,7 @@ public:
 
 
 	/// Shortcut for section(sectionName).
-	IniSection opIndex(char[] sectionName)
+	IniSection opIndex(string sectionName)
 	{
 		return section(sectionName);
 	}
@@ -765,7 +769,7 @@ public:
 
 	/// The section is created if one named name does not exist.
 	/// Returns: Section named name.
-	IniSection addSection(char[] name)
+	IniSection addSection(string name)
 	{
 		IniSection isec = section(name);
 		if(!isec)
@@ -800,7 +804,7 @@ public:
 	
 	
 	/// _Remove section named sectionName.
-	void remove(char[] sectionName)
+	void remove(string sectionName)
 	{
 		uint i;
 		for(i = 0; i != isecs.length; i++)
@@ -823,7 +827,11 @@ public:
 
 unittest
 {
-	char[] inifile = "unittest.ini";
+	string inifile = "unittest.ini";
+	// Jesse Phillips
+	// Remove file when done.
+	scope(exit)
+		std.file.remove(inifile);
 	Ini ini;
 
 	ini = new Ini(inifile);
