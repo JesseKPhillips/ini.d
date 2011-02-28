@@ -22,8 +22,10 @@
 /*
  
 	Modified by Jesse Phillips
+	Made to work with D 2.0. 
 	Changed all string to string. 
 	Changed inout to ref for fuctions
+	Added some @safe and nothrow
 	Other changes marked
 
 Update:
@@ -149,6 +151,7 @@ protected:
 
 public:
 	/// Property: get section _name.
+	@safe nothrow
 	string name()
 	{
 		return _name;
@@ -156,6 +159,7 @@ public:
 
 
 	/// Property: set section _name.
+	@safe nothrow
 	void name(string newName)
 	{
 		_ini._modified = true;
@@ -210,6 +214,7 @@ public:
 
 
 	/// Set an existing key's value.
+	@safe nothrow
 	void setValue(IniKey ikey, string newValue)
 	{
 		ikey._value = newValue;
@@ -239,6 +244,7 @@ public:
 	
 	
 	/// Same as setValue(ikey, newValue).
+	@safe nothrow
 	void value(IniKey ikey, string newValue)
 	{
 		return setValue(ikey, newValue);
@@ -339,7 +345,7 @@ protected:
 			delete f;
 			+/
 		}
-		catch(Object o)
+		catch(Throwable o)
 		{
 			debug(INI)
 				std.cstream.dout.writeString("INI no file to parse\n");
@@ -675,6 +681,7 @@ public:
 
 
 	/// Release memory without saving changes; contents become empty.
+	@safe nothrow
 	void dump()
 	{
 		_modified = false;
@@ -683,6 +690,7 @@ public:
 
 
 	/// Property: get whether or not the INI file was _modified since it was loaded or saved.
+	@safe nothrow
 	bool modified()
 	{
 		return _modified;
@@ -798,6 +806,7 @@ public:
 
 
 	/// Property: get all _sections.
+	@safe nothrow
 	IniSection[] sections()
 	{
 		return isecs;
