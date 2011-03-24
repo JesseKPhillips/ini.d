@@ -1,6 +1,5 @@
 /*
 	Copyright (C) 2004-2006 Christopher E. Miller
-	http://www.dprogramming.com/ini.php
 	
 	This software is provided 'as-is', without any express or implied
 	warranty.  In no event will the authors be held liable for any damages
@@ -24,7 +23,6 @@
 	Modified by Jesse Phillips
 	Made to work with D 2.0. 
 	Changed all string to string. 
-	Changed inout to ref for fuctions
 	Added some @safe and nothrow
 	Other changes marked
 
@@ -615,12 +613,17 @@ protected:
 	void firstOpen(string file)
 	{
 		//null terminated just to make it easier for the implementation
-		_file = toStringz(file)[0 .. file.length];
+		//_file = toStringz(file)[0 .. file.length];
+		// JP Modified
+		_file = file;
 		parse();
 	}
 
 
 public:
+	// Added by Jesse Phillips
+	/// Upon the next save use this file.
+	string saveTo;
 	// Use different section name delimiters; not recommended.
 	this(string file, char secStart, char secEnd)
 	{
@@ -722,7 +725,8 @@ public:
 		for(; i != isecs.length; i++)
 		{
 			write_name:
-			f.printf("%c%.*s%c\r\n", secStart, isecs[i]._name, secEnd);
+			// JP Modified added dup
+			f.printf("%c%.*s%c\r\n".dup, secStart, isecs[i]._name.dup, secEnd);
 			after_name:
 			isec = isecs[i];
 			for(j = 0; j != isec.lines.length; j++)
@@ -739,10 +743,13 @@ public:
 		}
 	}
 
-
 	/// Write contents to disk, even if no changes were made. It is common to do if(modified)save();
 	void save()
 	{
+		if(saveTo) {
+			_file = saveTo;
+			saveTo = null;
+		}
 		BufferedFile f = new BufferedFile;
 		f.create(_file);
 		try
@@ -754,6 +761,13 @@ public:
 		{
 			f.close();
 		}
+	}
+
+	/// Write contents to disk with filename
+	// Added by Jesse Phillips
+	void save(string filename) {
+		_file = filename;
+		save();
 	}
 
 
