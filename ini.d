@@ -454,7 +454,8 @@ protected:
 							case 0: //eof
 								goto ini_eof;
 							
-							default: ;
+							default:
+								break;
 						}
 					}
 					break;
@@ -596,12 +597,14 @@ protected:
 												reset();
 												goto ini_eof;
 											
-											default: ;
+											default:
+												break;
 										}
 									}
 									break done_default;
 								
-								default: ;
+								default:
+									break;
 							}
 						}
 					}
