@@ -110,14 +110,14 @@ protected:
 
 public:
 	/// Property: get key _name.
-	string name()
+	@property string name()
 	{
 		return _name;
 	}
 
 
 	/// Property: get key _value.
-	string value()
+	@property string value()
 	{
 		return _value;
 	}
@@ -149,7 +149,7 @@ protected:
 
 public:
 	/// Property: get section _name.
-	@safe nothrow
+	@property @safe nothrow
 	string name()
 	{
 		return _name;
@@ -157,7 +157,7 @@ public:
 
 
 	/// Property: set section _name.
-	@safe nothrow
+	@property @safe nothrow
 	void name(string newName)
 	{
 		_ini._modified = true;
@@ -187,7 +187,7 @@ public:
 
 	/// Property: get all _keys.
 	//better to use foreach unless this array is needed
-	IniKey[] keys()
+	@property IniKey[] keys()
 	{
 		IniKey[] ikeys = new IniKey[lines.length];
 		uint i = 0;
@@ -693,7 +693,7 @@ public:
 
 
 	/// Property: get whether or not the INI file was _modified since it was loaded or saved.
-	@safe nothrow
+	@property @safe nothrow
 	bool modified()
 	{
 		return _modified;
@@ -820,7 +820,7 @@ public:
 
 
 	/// Property: get all _sections.
-	@safe nothrow
+	@property @safe nothrow
 	IniSection[] sections()
 	{
 		return isecs;
