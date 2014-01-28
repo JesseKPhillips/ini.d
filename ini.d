@@ -1,15 +1,15 @@
 /*
 	Copyright (C) 2004-2006 Christopher E. Miller
 	http://www.dprogramming.com/ini.php
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty.  In no event will the authors be held liable for any damages
 	arising from the use of this software.
-	
+
 	Permission is granted to anyone to use this software for any purpose,
 	including commercial applications, and to alter it and redistribute it
 	freely, subject to the following restrictions:
-	
+
 	1. The origin of this software must not be misrepresented; you must not
 	   claim that you wrote the original software. If you use this software
 	   in a product, an acknowledgment in the product documentation would be
@@ -22,8 +22,9 @@
 /*
  
 	Modified by Jesse Phillips
+	Made to work with D 2.0. 
 	Changed all string to string. 
-	Changed inout to ref for fuctions
+	Added some @safe and nothrow
 	Other changes marked
 
 Update:
@@ -110,14 +111,14 @@ protected:
 
 public:
 	/// Property: get key _name.
-	string name()
+	@property string name()
 	{
 		return _name;
 	}
 
 
 	/// Property: get key _value.
-	string value()
+	@property string value()
 	{
 		return _value;
 	}
@@ -149,6 +150,7 @@ protected:
 
 public:
 	/// Property: get section _name.
+	@property @safe nothrow
 	string name()
 	{
 		return _name;
@@ -156,6 +158,7 @@ public:
 
 
 	/// Property: set section _name.
+	@property @safe nothrow
 	void name(string newName)
 	{
 		_ini._modified = true;
@@ -185,7 +188,7 @@ public:
 
 	/// Property: get all _keys.
 	//better to use foreach unless this array is needed
-	IniKey[] keys()
+	@property IniKey[] keys()
 	{
 		IniKey[] ikeys = new IniKey[lines.length];
 		uint i = 0;
@@ -205,11 +208,12 @@ public:
 			if(_ini.match(ikey._name, keyName))
 				return ikey;
 		}
-		return null; //didn't find it
+		return new IniKey(keyName); //didn't find it
 	}
 
 
 	/// Set an existing key's value.
+	@safe nothrow
 	void setValue(IniKey ikey, string newValue)
 	{
 		ikey._value = newValue;
@@ -239,6 +243,7 @@ public:
 	
 	
 	/// Same as setValue(ikey, newValue).
+	@safe nothrow
 	void value(IniKey ikey, string newValue)
 	{
 		return setValue(ikey, newValue);
@@ -339,7 +344,7 @@ protected:
 			delete f;
 			+/
 		}
-		catch(Object o)
+		catch(Throwable o)
 		{
 			debug(INI)
 				std.cstream.dout.writeString("INI no file to parse\n");
@@ -450,7 +455,8 @@ protected:
 							case 0: //eof
 								goto ini_eof;
 							
-							default: ;
+							default:
+								break;
 						}
 					}
 					break;
@@ -592,12 +598,14 @@ protected:
 												reset();
 												goto ini_eof;
 											
-											default: ;
+											default:
+												break;
 										}
 									}
 									break done_default;
 								
-								default: ;
+								default:
+									break;
 							}
 						}
 					}
@@ -609,12 +617,17 @@ protected:
 	void firstOpen(string file)
 	{
 		//null terminated just to make it easier for the implementation
-		_file = toStringz(file)[0 .. file.length];
+		//_file = toStringz(file)[0 .. file.length];
+		// JP Modified
+		_file = file;
 		parse();
 	}
 
 
 public:
+	// Added by Jesse Phillips
+	/// Upon the next save use this file.
+	string saveTo;
 	// Use different section name delimiters; not recommended.
 	this(string file, char secStart, char secEnd)
 	{
@@ -675,6 +688,7 @@ public:
 
 
 	/// Release memory without saving changes; contents become empty.
+	@safe nothrow
 	void dump()
 	{
 		_modified = false;
@@ -683,6 +697,7 @@ public:
 
 
 	/// Property: get whether or not the INI file was _modified since it was loaded or saved.
+	@property @safe nothrow
 	bool modified()
 	{
 		return _modified;
@@ -714,7 +729,8 @@ public:
 		for(; i != isecs.length; i++)
 		{
 			write_name:
-			f.printf("%c%.*s%c\r\n", secStart, isecs[i]._name, secEnd);
+			// JP Modified added dup
+			f.printf("%c%.*s%c\r\n".dup, secStart, isecs[i]._name.dup, secEnd);
 			after_name:
 			isec = isecs[i];
 			for(j = 0; j != isec.lines.length; j++)
@@ -731,10 +747,13 @@ public:
 		}
 	}
 
-
 	/// Write contents to disk, even if no changes were made. It is common to do if(modified)save();
 	void save()
 	{
+		if(saveTo) {
+			_file = saveTo;
+			saveTo = null;
+		}
 		BufferedFile f = new BufferedFile;
 		f.create(_file);
 		try
@@ -746,6 +765,13 @@ public:
 		{
 			f.close();
 		}
+	}
+
+	/// Write contents to disk with filename
+	// Added by Jesse Phillips
+	void save(string filename) {
+		_file = filename;
+		save();
 	}
 
 
@@ -798,6 +824,7 @@ public:
 
 
 	/// Property: get all _sections.
+	@property @safe nothrow
 	IniSection[] sections()
 	{
 		return isecs;
