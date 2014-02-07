@@ -226,7 +226,7 @@ public:
 	void setValue(string keyName, string newValue)
 	{
 		IniKey ikey = key(keyName);
-		if(!ikey)
+		if(!ikey.data)
 		{
 			ikey = new IniKey(keyName);
 			lines ~= ikey;
