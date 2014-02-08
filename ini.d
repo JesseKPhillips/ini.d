@@ -132,12 +132,13 @@ protected:
 	Ini _ini;
 	string _name;
 	IniLine[] lines;
+	bool _detatched;
 
-
-	this(Ini ini, string name)
+	this(Ini ini, string name, bool detatched = false)
 	{
 		_ini = ini;
 		_name = name;
+		_detatched = detatched;
 	}
 	
 	
@@ -147,6 +148,26 @@ protected:
 			printf("~IniSection '%.*s'\n", _name);
 	}
 
+	@safe nothrow
+	private void attach() {
+		if(_detatched)
+			_ini.addSection(this);
+		_detatched = false;
+	}
+
+	unittest {
+		string inifile = "unittest.ini";
+		Ini ini;
+
+		ini = new Ini(inifile);
+		auto sec = ini["NewSection"];
+		sec.setValue("NewKey", "NewValue");
+		assert(ini["NewSection"]["NewKey"] == "NewValue");
+		import std.range;
+		assert(ini["Invalid"]["Invalid"].empty);
+		ini["missing"]["new"] = "Value";
+		assert(ini["missing"]["new"] == "Value");
+	}
 
 public:
 	/// Property: get section _name.
@@ -200,7 +221,7 @@ public:
 	}
 
 
-	/// Returns: _key matching keyName, or null if not present.
+	/// Returns: _key matching keyName, or a new key if not present.
 	IniKey key(string keyName)
 	{
 		foreach(IniKey ikey; this)
@@ -219,8 +240,9 @@ public:
 		ikey._value = newValue;
 		_ini._modified = true;
 		ikey.data = null;
+		if(_detatched)
+			attach();
 	}
-
 
 	/// Find or create key keyName and set its _value to newValue.
 	void setValue(string keyName, string newValue)
@@ -775,7 +797,7 @@ public:
 	}
 
 
-	/// Finds a _section; returns null if one named name does not exist.
+	/// Finds a _section; returns a new section if one named name does not exist.
 	IniSection section(string name)
 	{
 		foreach(IniSection isec; isecs)
@@ -783,9 +805,27 @@ public:
 			if(match(isec._name, name))
 				return isec;
 		}
-		return null; //didn't find it
+		return new IniSection(this, name, true); //didn't find it
 	}
 
+	bool hasSection(string name)
+	{
+		foreach(IniSection isec; isecs)
+			if(match(isec._name, name))
+				return true;
+		return false;
+	}
+
+	unittest {
+		string inifile = "unittest.ini";
+		Ini ini;
+
+		ini = new Ini(inifile);
+		auto sec = ini["NewSection"];
+		sec.setValue("NewKey", "NewValue");
+		assert(ini.hasSection("NewSection"));
+		assert(!ini.hasSection("Missing"));
+	}
 
 	/// Shortcut for section(sectionName).
 	IniSection opIndex(string sectionName)
@@ -799,15 +839,17 @@ public:
 	IniSection addSection(string name)
 	{
 		IniSection isec = section(name);
-		if(!isec)
-		{
-			isec = new IniSection(this, name);
-			_modified = true;
-			isecs ~= isec;
-		}
+		if(isec._detatched)
+			isec.attach();
 		return isec;
 	}
 
+	@safe nothrow
+	void addSection(IniSection isec)
+	{
+		isecs ~= isec;
+		_modified = true;
+	}
 
 	/// foreach section.
 	int opApply(int delegate(ref IniSection) dg)
@@ -870,6 +912,7 @@ unittest
 		value("hi", "hello");
 	}
 	ini.addSection("BAR");
+	assert(!ini["bar"]._detatched);
 	with(ini.addSection("fOO"))
 	{
 		value("yes", "no");
@@ -886,26 +929,26 @@ unittest
 	ini["test"]["value"] = "true";
 	assert(ini["Foo"]["yes"] == "no");
 	ini.save();
-	delete ini;
 
 	ini = new Ini(inifile);
 	assert(ini["FOO"]["Bar"] == "wee!");
 	assert(ini["Foo"]["yes"] == "no");
 	assert(ini["hello"]["world"] == "true");
 	assert(ini["FOO"]["Bar"] == "wee!");
-	assert(ini["55"] is null);
+	assert(ini["55"]._detatched);
+	assert(!ini["hello"]._detatched);
 	assert(ini["hello"]["Yes"] is null);
 	
 	ini.open(inifile);
+	assert(!ini["BAR"]._detatched);
 	ini["bar"].remove("notta");
 	ini["foo"].remove("bar");
 	ini.remove("bar");
-	assert(ini["bar"] is null);
-	assert(ini["foo"] !is null);
+	assert(ini["bar"]._detatched);
+	assert(!ini["foo"]._detatched);
 	assert(ini["foo"]["bar"] is null);
 	ini.remove("foo");
-	assert(ini["foo"] is null);
+	assert(ini["foo"]._detatched);
 	ini.save();
-	delete ini;
 }
 
