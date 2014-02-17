@@ -62,7 +62,7 @@ Differences with Windows' profile (INI) functions:
 /// Portable module for reading and writing _INI files. _ini.d version 0.6
 module ini;
 
-private import std.file, std.string, std.stream;
+private import std.file, std.string, std.stream, std.range;;
 
 
 //debug = INI; //show file being parsed
@@ -347,19 +347,19 @@ protected:
 	char secStart = '[', secEnd = ']';
 
 
-	void parse()
+	void parse(string data = null)
 	{
 		debug(INI)
 			printf("INI parsing file '%.*s'\n", _file);
 
-		string data;
 		int i = -1;
 		IniSection isec;
 		uint lineStartIndex = 0; 
 
 		try
 		{
-			data = cast(string)std.file.read(_file);
+			if(data.empty)
+				data = cast(string)std.file.read(_file);
 			/+
 			File f = new File(_file, FileMode.In);
 			data = f.readString(f.size());
@@ -636,13 +636,13 @@ protected:
 	}
 	
 	
-	void firstOpen(string file)
+	void firstOpen(string file, string data = null)
 	{
 		//null terminated just to make it easier for the implementation
 		//_file = toStringz(file)[0 .. file.length];
 		// JP Modified
 		_file = file;
-		parse();
+		parse(data);
 	}
 
 
@@ -661,9 +661,9 @@ public:
 
 
 	/// Construct a new INI _file.
-	this(string file)
+	this(string file, string data = null)
 	{
-		firstOpen(file);
+		firstOpen(file, data);
 	}
 
 
