@@ -62,14 +62,15 @@ Differences with Windows' profile (INI) functions:
 /// Portable module for reading and writing _INI files. _ini.d version 0.6
 module ini;
 
-private import std.file, std.string, std.stream, std.range;;
+import std.file, std.string, std.range;
+import std.stdio : File;
 
 
 //debug = INI; //show file being parsed
 
 
 debug(INI)
-	private import std.cstream;
+	import std.cstream;
 
 
 private class IniLine
@@ -360,11 +361,6 @@ protected:
 		{
 			if(data.empty)
 				data = cast(string)std.file.read(_file);
-			/+
-			File f = new File(_file, FileMode.In);
-			data = f.readString(f.size());
-			delete f;
-			+/
 		}
 		catch(Throwable o)
 		{
@@ -727,8 +723,8 @@ public:
 	
 	
 	/// Params:
-	/// f = an opened-for-write stream; save() uses BufferedFile by default. Override save() to change stream.
-	protected final void saveToStream(Stream f)
+	/// f = an opened-for-write stream; save() uses File by default. Override save() to change stream.
+	protected final void saveToStream(File* f)
 	{
 		_modified = false;
 
@@ -738,10 +734,6 @@ public:
 		IniKey ikey;
 		IniSection isec;
 		uint i = 0, j;
-		//auto File f = new File;
-
-		//f.create(_file, FileMode.Out);
-		assert(f.writeable);
 
 		if(isecs[0]._name.length)
 			goto write_name;
@@ -751,8 +743,7 @@ public:
 		for(; i != isecs.length; i++)
 		{
 			write_name:
-			// JP Modified added dup
-			f.printf("%c%.*s%c\r\n".dup, secStart, isecs[i]._name.dup, secEnd);
+			f.writefln("%c%s%c%s", secStart, isecs[i]._name, secEnd);
 			after_name:
 			isec = isecs[i];
 			for(j = 0; j != isec.lines.length; j++)
@@ -763,8 +754,7 @@ public:
 					if(ikey)
 						ikey.data = ikey._name ~ "=" ~ ikey._value;
 				}
-				f.writeString(isec.lines[j].data);
-				f.writeString("\r\n");
+				f.writeln(isec.lines[j].data);
 			}
 		}
 	}
@@ -776,12 +766,12 @@ public:
 			_file = saveTo;
 			saveTo = null;
 		}
-		BufferedFile f = new BufferedFile;
-		f.create(_file);
+		auto f = new File(_file, "w");
 		try
 		{
 			saveToStream(f);
 			f.flush();
+			_modified = false;
 		}
 		finally
 		{
